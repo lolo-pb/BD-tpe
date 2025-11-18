@@ -170,7 +170,7 @@ select consolidacion('carla.perez21@mail.com');
 
 -- TODO:
 
--verificar ejemplos 
+- verificar ejemplos 
 
 - se tiene que llamar consolidar_cliente ( actualmente consolidacion() )
 

@@ -70,7 +70,12 @@ BEGIN
         RETURN NEW;
     END IF;
 
-    IF NEW.fecha <= ult_fin AND NEW.fecha >= ult_fin - INTERVAL '30 days' THEN
+    -- Validación: Renovación anticipada (más de 30 días antes del vencimiento)
+    IF NEW.fecha < ult_fin - INTERVAL '30 days' THEN
+        RAISE EXCEPTION 'Renovación anticipada: el pago se realizó más de 30 días antes del vencimiento (fecha_fin: %)', ult_fin;
+    END IF;
+
+    IF NEW.fecha <= ult_fin THEN
         INSERT INTO suscripcion(cliente_email, tipo, modalidad, fecha_inicio, fecha_fin)
         VALUES (
             NEW.cliente_email,
@@ -144,12 +149,10 @@ insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, m
 
 -- Ej(2)
 
-// inicia con esto ... 
+// esta inserta bien
 insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2024-01-01', 'tarjeta_credito', 'E1-BASE-UUID-0001', 'agustin.ramos@mail.com', 'anual', 30000);
-// TODO : >< ESTO NO FUNCIONA
-/// ... y esta deberia rechazarla y no cambiar las tablas
+// esta la rechaza y no cambia las tablas
 insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2024-09-01', 'tarjeta_debito', 'E1-ANTICIPADA-MAL', 'agustin.ramos@mail.com', 'anual', 30000);
-///
 
 
 // inicia con esto ...

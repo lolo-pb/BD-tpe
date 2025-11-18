@@ -128,3 +128,43 @@ BEGIN
     ORDER BY fecha_inicio;
 END;
 $$ LANGUAGE plpgsql;
+
+/*
+ -- EJEMPLOS -- 
+-- Ej(1)  funciona
+insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2024-01-01','tarjeta_credito', 'UUID-001', 'valentina.sosa@mail.com','mensual',3000);
+insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2024-01-28','tarjeta_debito', 'UUID-002', 'valentina.sosa@mail.com','mensual',3000);
+insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2023-03-10', 'mercadopago', 'UUID-003', 'julian.moreno@mail.com', 'anual', 30000);
+insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2024-03-01', 'tarjeta_credito', 'UUID-004', 'julian.moreno@mail.com', 'anual', 30000);
+insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2022-08-01', 'efectivo', 'UUID-005', 'carla.perez21@mail.com', 'mensual', 3000);
+insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2022-10-10', 'transferencia', 'UUID-006', 'carla.perez21@mail.com', 'mensual', 3000);
+
+
+-- Ej(2)
+
+// inicia con esto ... 
+insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2024-01-01', 'tarjeta_credito', 'E1-BASE-UUID-0001', 'agustin.ramos@mail.com', 'anual', 30000);
+// TODO : >< ESTO NO FUNCIONA
+/// ... y esta deberia rechazarla y no cambiar las tablas
+insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2024-09-01', 'tarjeta_debito', 'E1-ANTICIPADA-MAL', 'agustin.ramos@mail.com', 'anual', 30000);
+///
+
+
+// inicia con esto ...
+insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2024-01-01', 'tarjeta_credito', ' E7-FUTURO-BASE', 'nicolas.castro@mail.com', 'anual', 30000);
+// TODO : >< ESTO NO FUNCIONA
+/// ... y deberia rechazar esto 
+insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2023-12-20', 'efectivo', 'E7-RETRO-SUPERP', 'nicolas.castro@mail.com', 'mensual', 3000);
+///
+
+
+
+TODO:
+
+-verificar ejemplos 
+
+- que consolidar_cliente se llame asi ( actualmente consolidacion() creo... )
+
+- mepa que consolidar no esta andando
+
+*/

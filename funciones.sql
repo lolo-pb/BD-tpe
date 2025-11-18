@@ -48,15 +48,17 @@ CREATE TABLE suscripcion (
 CREATE OR REPLACE FUNCTION trg_nueva_suscripcion() RETURNS TRIGGER AS $$
 DECLARE
     ult_id INT;
+    ult_inicio DATE;
     ult_fin DATE;
 BEGIN
-    SELECT id, fecha_fin
-    INTO ult_id, ult_fin
+    SELECT id, fecha_inicio, fecha_fin
+    INTO ult_id, ult_inicio, ult_fin
     FROM suscripcion
     WHERE cliente_email = NEW.cliente_email
     ORDER BY fecha_fin DESC
     LIMIT 1;
 
+    -- Si no existe suscripción previa, es una nueva suscripción
     IF ult_id IS NULL THEN
         INSERT INTO suscripcion(cliente_email, tipo, modalidad, fecha_inicio, fecha_fin)
         VALUES (
@@ -70,12 +72,18 @@ BEGIN
         RETURN NEW;
     END IF;
 
-    -- Validación: Renovación anticipada (más de 30 días antes del vencimiento)
-    IF NEW.fecha < ult_fin - INTERVAL '30 days' THEN
-        RAISE EXCEPTION 'Renovación anticipada: el pago se realizó más de 30 días antes del vencimiento (fecha_fin: %)', ult_fin;
+    -- 1) Chequear solapamiento: pago con fecha anterior al inicio de la última suscripción
+    IF NEW.fecha < ult_inicio THEN
+        RAISE EXCEPTION 'Pago con fecha anterior al inicio de la última suscripción (fecha_inicio: %)', ult_inicio;
     END IF;
 
+    -- 2) Si la fecha cae dentro o antes del fin de la última suscripción, tratamos como renovación
     IF NEW.fecha <= ult_fin THEN
+        -- Validación: Renovación anticipada (más de 30 días antes del vencimiento)
+        IF NEW.fecha < ult_fin - INTERVAL '30 days' THEN
+            RAISE EXCEPTION 'Renovación anticipada: el pago se realizó más de 30 días antes del vencimiento (fecha_fin: %)', ult_fin;
+        END IF;
+
         INSERT INTO suscripcion(cliente_email, tipo, modalidad, fecha_inicio, fecha_fin)
         VALUES (
             NEW.cliente_email,
@@ -88,6 +96,7 @@ BEGIN
         RETURN NEW;
     END IF;
 
+    -- Si la fecha es posterior al fin de la última suscripción, es una nueva suscripción
     INSERT INTO suscripcion(cliente_email, tipo, modalidad, fecha_inicio, fecha_fin)
     VALUES (
         NEW.cliente_email,
@@ -149,18 +158,22 @@ insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, m
 
 -- Ej(2)
 
-// esta inserta bien
-insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2024-01-01', 'tarjeta_credito', 'E1-BASE-UUID-0001', 'agustin.ramos@mail.com', 'anual', 30000);
-// esta la rechaza y no cambia las tablas
-insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2024-09-01', 'tarjeta_debito', 'E1-ANTICIPADA-MAL', 'agustin.ramos@mail.com', 'anual', 30000);
+-- Ej(2) ejemplos y notas
+-- Esta inserción base debe crear la suscripción inicial:
+INSERT INTO pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto)
+    VALUES ('2024-01-01', 'tarjeta_credito', 'E1-BASE-UUID-0001', 'agustin.ramos@mail.com', 'anual', 30000);
+-- Esta inserción representa una renovación anticipada (>30 días antes del fin) y debe ser RECHAZADA por el trigger:
+INSERT INTO pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto)
+    VALUES ('2024-09-01', 'tarjeta_debito', 'E1-ANTICIPADA-MAL', 'agustin.ramos@mail.com', 'anual', 30000);
 
-
-// inicia con esto ...
-insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2024-01-01', 'tarjeta_credito', ' E7-FUTURO-BASE', 'nicolas.castro@mail.com', 'anual', 30000);
-// TODO : >< ESTO NO FUNCIONA
-/// ... y deberia rechazar esto 
-insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2023-12-20', 'efectivo', 'E7-RETRO-SUPERP', 'nicolas.castro@mail.com', 'mensual', 3000);
-///
+-- Caso solapamiento/retroactivo:
+-- Si se inserta una primera suscripción con fecha '2024-01-01' para 'nicolas.castro@mail.com',
+-- un pago con fecha anterior al inicio de esa suscripción (por ejemplo '2023-12-20') debe ser RECHAZADO.
+INSERT INTO pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto)
+    VALUES ('2024-01-01', 'tarjeta_credito', 'E7-FUTURO-BASE', 'nicolas.castro@mail.com', 'anual', 30000);
+-- Este siguiente insert debe ser rechazado por solapamiento (fecha anterior al inicio):
+INSERT INTO pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto)
+    VALUES ('2023-12-20', 'efectivo', 'E7-RETRO-SUPERP', 'nicolas.castro@mail.com', 'mensual', 3000);
 
 -- Ej(3)
 // Inserts del Ej 1

@@ -131,6 +131,8 @@ $$ LANGUAGE plpgsql;
 
 /*
  -- EJEMPLOS -- 
+Nota: Ojo que  el copy del pdf aveces pone el "'" mal y no corre 
+
 -- Ej(1)  funciona
 insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2024-01-01','tarjeta_credito', 'UUID-001', 'valentina.sosa@mail.com','mensual',3000);
 insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2024-01-28','tarjeta_debito', 'UUID-002', 'valentina.sosa@mail.com','mensual',3000);
@@ -157,14 +159,22 @@ insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, m
 insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2023-12-20', 'efectivo', 'E7-RETRO-SUPERP', 'nicolas.castro@mail.com', 'mensual', 3000);
 ///
 
+-- Ej(3)
+// Inserts del Ej 1
+select consolidacion('valentina.sosa@mail.com');
+select consolidacion('julian.moreno@mail.com');
+select consolidacion('carla.perez21@mail.com');
+// No retorna en el formato correcto
 
 
-TODO:
+
+-- TODO:
 
 -verificar ejemplos 
 
-- que consolidar_cliente se llame asi ( actualmente consolidacion() creo... )
+- se tiene que llamar consolidar_cliente ( actualmente consolidacion() )
 
-- mepa que consolidar no esta andando
+- formato de retorno de consolidar
+- validar respuestas bien
 
 */

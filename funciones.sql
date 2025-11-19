@@ -98,7 +98,7 @@ BEGIN
     -- (Termina antes de que empiece la vieja) O (Empieza después de que termine la vieja)
     -- Por el contrario, FALLA si: (Empieza antes del fin viejo) Y (Termina después del inicio viejo)
     IF (NEW.fecha <= ult_fin) AND (v_posible_fin >= ult_inicio) THEN
-        RAISE EXCEPTION 'Solapamiento: La suscripción antigua inicia el %, y tu nueva suscripción terminaría el %. Se superponen.', ult_inicio, v_posible_fin;
+        RAISE EXCEPTION 'Solapamiento: Intervalo antiguo  { % , % }, y tu nueva suscripción { % , % }.', ult_inicio, ult_fin, NEW.fecha ,v_posible_fin;
     END IF;
 
     -- VALIDACIÓN: Bloqueo de renovación prematura

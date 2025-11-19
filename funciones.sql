@@ -76,9 +76,7 @@ BEGIN
     v_posible_fin := CASE WHEN NEW.modalidad = 'mensual' THEN NEW.fecha + INTERVAL '1 month' - INTERVAL '1 day'
                           ELSE NEW.fecha + INTERVAL '1 year' - INTERVAL '1 day' END;
 
-    -- 2. Lógica de Renovación (Excepción al solapamiento)
-    -- Si la fecha de pago está dentro de la ventana de renovación (hasta 30 días antes del fin),
-    -- procesamos como renovación y salimos.
+    -- 2. Lógica de Renovación
     IF NEW.fecha <= ult_fin AND NEW.fecha >= (ult_fin - INTERVAL '30 days') THEN
         
         INSERT INTO suscripcion(cliente_email, tipo, modalidad, fecha_inicio, fecha_fin)
@@ -89,31 +87,34 @@ BEGIN
             ult_fin + INTERVAL '1 day',
             CASE WHEN NEW.modalidad = 'mensual' THEN (ult_fin + INTERVAL '1 day') + INTERVAL '1 month' - INTERVAL '1 day'
                  ELSE (ult_fin + INTERVAL '1 day') + INTERVAL '1 year' - INTERVAL '1 day' END
+                 -- Esto se suma y resta para que queden bien las fechas: 
+                 -- termina el 31 dic => hace 1 ene -> 1->fev -> 31 v 29 de enero segun corresponda
         ) RETURNING id INTO NEW.suscripcion_id;
         RETURN NEW;
     END IF;
 
-    -- 3. Chequeo de Solapamiento (Tu requerimiento específico)
+    -- 3. Chequeo de Solapamiento
     -- La suscripción es válida SOLO SI:
     -- (Termina antes de que empiece la vieja) O (Empieza después de que termine la vieja)
     -- Por el contrario, FALLA si: (Empieza antes del fin viejo) Y (Termina después del inicio viejo)
     IF (NEW.fecha <= ult_fin) AND (v_posible_fin >= ult_inicio) THEN
-         -- Aquí refinamos el mensaje dependiendo del caso
-         IF NEW.fecha < ult_inicio THEN
-             RAISE EXCEPTION 'Solapamiento: La suscripción antigua inicia el %, y tu nueva suscripción terminaría el %. Se superponen.', ult_inicio, v_posible_fin;
-         ELSE
-             RAISE EXCEPTION 'Renovación anticipada inválida: El pago es anterior a 30 días del vencimiento o se solapa con el periodo actual.';
-         END IF;
+        RAISE EXCEPTION 'Solapamiento: La suscripción antigua inicia el %, y tu nueva suscripción terminaría el %. Se superponen.', ult_inicio, v_posible_fin;
     END IF;
 
-    -- 4. Si pasó las validaciones, es una inserción "Nueva" (puede ser futura o pasada sin solapamiento)
+    -- VALIDACIÓN: Bloqueo de renovación prematura
+    -- Si la fecha del pago es ANTERIOR a la ventana permitida (30 días antes del fin)
+    IF NEW.fecha < (ult_fin - INTERVAL '30 days') THEN
+        RAISE EXCEPTION 'Renovación anticipada: Faltan más de 30 días para el vencimiento (Vence: %). Intente nuevamente más cerca de la fecha.', ult_fin;
+    END IF;
+
+    -- 4. Insert
     INSERT INTO suscripcion(cliente_email, tipo, modalidad, fecha_inicio, fecha_fin)
     VALUES (
         NEW.cliente_email,
         'nueva',
         NEW.modalidad,
         NEW.fecha,
-        v_posible_fin -- Usamos la fecha ya calculada
+        v_posible_fin
     ) RETURNING id INTO NEW.suscripcion_id;
 
     RETURN NEW;

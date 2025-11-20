@@ -8,20 +8,12 @@ DROP FUNCTION IF EXISTS trg_nueva_suscripcion() CASCADE;
 -- Tu nueva función de reporte: 'consolidacion(VARCHAR)'
 DROP FUNCTION IF EXISTS consolidacion(VARCHAR) CASCADE;
 -- Mantenemos los nombres antiguos por si acaso:
-DROP FUNCTION IF EXISTS procesar_pago_suscripcion() CASCADE; 
 DROP FUNCTION IF EXISTS consolidar_cliente(VARCHAR) CASCADE; 
 
 -- Limpieza de Tablas e Índices
 -- Usamos CASCADE para asegurar que las llaves foráneas y el trigger se borren
 DROP TABLE IF EXISTS PAGO CASCADE; 
 DROP TABLE IF EXISTS SUSCRIPCION CASCADE;
-DROP INDEX IF EXISTS idx_suscripcion_cliente_email; 
-
--- Limpieza de Tipos
-DROP TYPE IF EXISTS tipo_medio_pago CASCADE;
-DROP TYPE IF EXISTS tipo_modalidad CASCADE;
-DROP TYPE IF EXISTS tipo_suscripcion CASCADE;
--- TP ESPECIAL BASES DE DATOS - SQL
 
 -- 1. TABLA PAGO
 CREATE TABLE pago (

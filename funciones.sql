@@ -4,13 +4,13 @@ DROP TRIGGER IF EXISTS pago_trigger ON PAGO;
 
 -- Limpieza de Funciones (usando las firmas correctas)
 -- Tu nueva función de trigger: 'trg_nueva_suscripcion()'
-DROP FUNCTION IF EXISTS trg_nueva_suscripcion() CASCADE; 
+DROP FUNCTION IF EXISTS trg_nueva_suscripcion() CASCADE;
 -- Tu nueva función de reporte: 'consolidacion(VARCHAR)'
-DROP FUNCTION IF EXISTS consolidar_cliente(VARCHAR) CASCADE; 
+DROP FUNCTION IF EXISTS consolidar_cliente(VARCHAR) CASCADE;
 
 -- Limpieza de Tablas e Índices
 -- Usamos CASCADE para asegurar que las llaves foráneas y el trigger se borren
-DROP TABLE IF EXISTS PAGO CASCADE; 
+DROP TABLE IF EXISTS PAGO CASCADE;
 DROP TABLE IF EXISTS SUSCRIPCION CASCADE;
 
 -- 1. TABLA PAGO
@@ -68,7 +68,7 @@ BEGIN
 
     -- 2. Lógica de Renovación
     IF NEW.fecha <= ult_fin AND NEW.fecha >= (ult_fin - INTERVAL '30 days') THEN
-        
+
         INSERT INTO suscripcion(cliente_email, tipo, modalidad, fecha_inicio, fecha_fin)
         VALUES (
             NEW.cliente_email,
@@ -77,7 +77,7 @@ BEGIN
             ult_fin + INTERVAL '1 day',
             CASE WHEN NEW.modalidad = 'mensual' THEN (ult_fin + INTERVAL '1 day') + INTERVAL '1 month' - INTERVAL '1 day'
                  ELSE (ult_fin + INTERVAL '1 day') + INTERVAL '1 year' - INTERVAL '1 day' END
-                 -- Esto se suma y resta para que queden bien las fechas: 
+                 -- Esto se suma y resta para que queden bien las fechas:
                  -- termina el 31 dic => hace 1 ene -> 1->fev -> 31 v 29 de enero segun corresponda
         ) RETURNING id INTO NEW.suscripcion_id;
         RETURN NEW;
@@ -144,17 +144,10 @@ END;
 $$ LANGUAGE plpgsql;
 
 /*
- -- EJEMPLOS -- 
-Nota: Ojo que  el copy del pdf aveces pone el "'" mal y no corre 
+ -- EJEMPLOS --
+Nota: Ojo que  el copy del pdf aveces pone el "'" mal y no corre
 
 -- Ej(1)  funciona
-insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2024-01-01','tarjeta_credito', 'UUID-001', 'valentina.sosa@mail.com','mensual',3000);
-insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2024-01-28','tarjeta_debito', 'UUID-002', 'valentina.sosa@mail.com','mensual',3000);
-insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2023-03-10', 'mercadopago', 'UUID-003', 'julian.moreno@mail.com', 'anual', 30000);
-insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2024-03-01', 'tarjeta_credito', 'UUID-004', 'julian.moreno@mail.com', 'anual', 30000);
-insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2022-08-01', 'efectivo', 'UUID-005', 'carla.perez21@mail.com', 'mensual', 3000);
-insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, monto) values ('2022-10-10', 'transferencia', 'UUID-006', 'carla.perez21@mail.com', 'mensual', 3000);
-
 
 -- Ej(2)
 
@@ -186,7 +179,7 @@ select consolidacion('carla.perez21@mail.com');
 
 -- TODO:
 
-- verificar ejemplos 
+- verificar ejemplos
 
 - se tiene que llamar consolidar_cliente ( actualmente consolidacion() )
 

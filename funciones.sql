@@ -4,9 +4,7 @@ DROP TRIGGER IF EXISTS pago_trigger ON PAGO;
 
 -- Limpieza de Funciones (usando las firmas correctas)
 -- Tu nueva función de trigger: 'trg_nueva_suscripcion()'
-DROP FUNCTION IF EXISTS trg_nueva_suscripcion() CASCADE; 
--- Tu nueva función de reporte: 'consolidacion(VARCHAR)'
-DROP FUNCTION IF EXISTS consolidacion(VARCHAR) CASCADE;
+DROP FUNCTION IF EXISTS trg_nueva_suscripcion() CASCADE;
 -- Mantenemos los nombres antiguos por si acaso:
 DROP FUNCTION IF EXISTS procesar_pago_suscripcion() CASCADE; 
 DROP FUNCTION IF EXISTS consolidar_cliente(VARCHAR) CASCADE; 
@@ -216,9 +214,9 @@ insert into pago (fecha, medio_pago, id_transaccion, cliente_email, modalidad, m
 
 -- Ej(3)
 // Inserts del Ej 1
-select consolidacion('valentina.sosa@mail.com');
-select consolidacion('julian.moreno@mail.com');
-select consolidacion('carla.perez21@mail.com');
+select consolidar_cliente('valentina.sosa@mail.com');
+select consolidar_cliente('julian.moreno@mail.com');
+select consolidar_cliente('carla.perez21@mail.com');
 // No retorna en el formato correcto
 
 
@@ -227,7 +225,7 @@ select consolidacion('carla.perez21@mail.com');
 
 - verificar ejemplos 
 
-- se tiene que llamar consolidar_cliente ( actualmente consolidacion() )
+- se tiene que llamar consolidar_cliente ( actualmente consolidar_cliente() )
 
 - formato de retorno de consolidar
 - validar respuestas bien

@@ -158,9 +158,9 @@ BEGIN
             periodo_fin := rec.fecha_fin;
             periodo_meses := periodo_meses + meses_susc;
         END IF;
-
-        RAISE NOTICE '  % % (% mes) | pago=% medio=% | cobertura=% a %',
+        RAISE NOTICE '  % % (% %) | pago=% medio=% | cobertura=% a %',
             UPPER(rec.tipo), UPPER(rec.modalidad), meses_susc,
+            CASE WHEN meses_susc = 1 THEN 'mes' ELSE 'meses' END,
             rec.fecha_pago, rec.medio_pago, rec.fecha_inicio, rec.fecha_fin;
 
         total_meses := total_meses + meses_susc;
@@ -175,11 +175,14 @@ BEGIN
 
         -- Imprimir resumen si la siguiente es nueva o es la última
         IF siguiente_tipo = 'nueva' OR contador = total_suscripciones THEN
-            RAISE NOTICE '  (Fin del periodo #%: % a %)  | Total periodo: % meses',
-                periodo_num, periodo_inicio, periodo_fin, periodo_meses;
-            RAISE NOTICE '== Total acumulado: % meses ==', total_meses;
+            RAISE NOTICE '  (Fin del periodo #%: % a %)  | Total periodo: % %', 
+                periodo_num, periodo_inicio, periodo_fin, periodo_meses,
+                CASE WHEN periodo_meses = 1 THEN 'mes' ELSE 'meses' END;
         END IF;
     END LOOP;
+    
+    RAISE NOTICE '== Total acumulado: % % ==', total_meses,
+        CASE WHEN total_meses = 1 THEN 'mes' ELSE 'meses' END;
 END;
 $$ LANGUAGE plpgsql;
 

@@ -28,8 +28,8 @@ CREATE TABLE pago (
     id_transaccion VARCHAR(100) PRIMARY KEY,
     cliente_email VARCHAR(255) NOT NULL,
     modalidad VARCHAR(10) NOT NULL CHECK (modalidad IN ('mensual','anual')),
-    monto NUMERIC(12,2) CHECK (monto > 0),
-    suscripcion_id INT
+    monto NUMERIC(12,2) CHECK (monto > 0) NOT NULL,
+    suscripcion_id INT NOT NULL
 );
 
 -- 2. TABLA SUSCRIPCION

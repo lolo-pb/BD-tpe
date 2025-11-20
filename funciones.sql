@@ -6,8 +6,6 @@ DROP TRIGGER IF EXISTS pago_trigger ON PAGO;
 -- Tu nueva función de trigger: 'trg_nueva_suscripcion()'
 DROP FUNCTION IF EXISTS trg_nueva_suscripcion() CASCADE; 
 -- Tu nueva función de reporte: 'consolidacion(VARCHAR)'
-DROP FUNCTION IF EXISTS consolidacion(VARCHAR) CASCADE;
--- Mantenemos los nombres antiguos por si acaso:
 DROP FUNCTION IF EXISTS consolidar_cliente(VARCHAR) CASCADE; 
 
 -- Limpieza de Tablas e Índices
@@ -119,7 +117,7 @@ FOR EACH ROW
 EXECUTE FUNCTION trg_nueva_suscripcion();
 
 -- 4. FUNCIÓN DE CONSOLIDACIÓN
-CREATE OR REPLACE FUNCTION consolidacion(email_busqueda VARCHAR)
+CREATE OR REPLACE FUNCTION consolidar_cliente(email_busqueda VARCHAR)
 RETURNS TABLE(
     cliente VARCHAR,
     id_suscripcion INT,

@@ -124,13 +124,13 @@ BEGIN
         RETURN;
     END IF;
 
-    SELECT COUNT(*) INTO total_suscripciones 
-    FROM suscripcion 
+    SELECT COUNT(*) INTO total_suscripciones
+    FROM suscripcion
     WHERE cliente_email = email_cliente;
 
     RAISE NOTICE '== Cliente: % ==', email_cliente;
 
-    FOR rec IN 
+    FOR rec IN
         SELECT s.*, p.fecha AS fecha_pago, p.medio_pago
         FROM suscripcion s
         JOIN pago p ON s.id = p.suscripcion_id
@@ -138,47 +138,44 @@ BEGIN
         ORDER BY s.fecha_inicio
     LOOP
         contador := contador + 1;
-        meses_susc := EXTRACT(YEAR FROM AGE(rec.fecha_fin, rec.fecha_inicio)) * 12 + 
+        meses_susc := EXTRACT(YEAR FROM AGE(rec.fecha_fin, rec.fecha_inicio)) * 12 +
                       EXTRACT(MONTH FROM AGE(rec.fecha_fin, rec.fecha_inicio)) + 1;
 
         IF rec.tipo = 'nueva' THEN
             IF periodo_num > 0 THEN
                 IF rec.fecha_inicio > prev_fin + INTERVAL '1 day' THEN
-                    RAISE NOTICE '';
-                    RAISE NOTICE '[PERIODO DE BAJA: % a %]', 
-                        prev_fin + INTERVAL '1 day', rec.fecha_inicio - INTERVAL '1 day';
+                    RAISE NOTICE '--- PERIODO DE BAJA ---';
                 END IF;
-                RAISE NOTICE '';
             END IF;
-            
+
             periodo_num := periodo_num + 1;
             periodo_inicio := rec.fecha_inicio;
             periodo_fin := rec.fecha_fin;
             periodo_meses := meses_susc;
-            
+
             RAISE NOTICE 'Periodo #%', periodo_num;
         ELSE
             periodo_fin := rec.fecha_fin;
             periodo_meses := periodo_meses + meses_susc;
         END IF;
-        
+
         RAISE NOTICE '  % % (% mes) | pago=% medio=% | cobertura=% a %',
             UPPER(rec.tipo), UPPER(rec.modalidad), meses_susc,
             rec.fecha_pago, rec.medio_pago, rec.fecha_inicio, rec.fecha_fin;
-        
+
         total_meses := total_meses + meses_susc;
         prev_fin := rec.fecha_fin;
-        
+
         -- Obtener el tipo de la siguiente suscripción
         SELECT tipo INTO siguiente_tipo
         FROM suscripcion
         WHERE cliente_email = email_cliente AND fecha_inicio > rec.fecha_inicio
         ORDER BY fecha_inicio
         LIMIT 1;
-        
+
         -- Imprimir resumen si la siguiente es nueva o es la última
         IF siguiente_tipo = 'nueva' OR contador = total_suscripciones THEN
-            RAISE NOTICE '  (Fin del periodo #%: % a %)  | Total periodo: % meses', 
+            RAISE NOTICE '  (Fin del periodo #%: % a %)  | Total periodo: % meses',
                 periodo_num, periodo_inicio, periodo_fin, periodo_meses;
             RAISE NOTICE '== Total acumulado: % meses ==', total_meses;
         END IF;

@@ -14,17 +14,30 @@ container:
 psql:
 	docker exec -it -u postgres pg-tpe-bd psql
 
-# Run examples
-examples:
+# Fill in the data from CSV
+import:
+	docker exec -it -u postgres pg-tpe-bd psql -f /root/ejemplos/import.sql
+
+# Run trigger tests
+test-trigger:
 	@echo ========================================================================================================================
-	@echo = Ejemplo 1
+	@echo = Tests trigger
 	@echo ========================================================================================================================
 	docker exec -it -u postgres pg-tpe-bd psql -f /root/ejemplos/clean.sql
 	docker exec -it -u postgres pg-tpe-bd psql -f /root/ejemplos/ej1.sql
 	@echo ========================================================================================================================
-	@echo = Ejemplo 1 errores
+	@echo = Tests trigger errores
 	@echo ========================================================================================================================
 	docker exec -it -u postgres pg-tpe-bd psql -f /root/ejemplos/clean.sql
 	docker exec -it -u postgres pg-tpe-bd psql -f /root/ejemplos/ej1-errors.sql
 
-.PHONY: container setup psql examples all
+# Run consolidate tests
+test-consolidate:
+	@echo ========================================================================================================================
+	@echo = Tests consolidación
+	@echo ========================================================================================================================
+	docker exec -it -u postgres pg-tpe-bd psql -f /root/ejemplos/clean.sql
+	docker exec -it -u postgres pg-tpe-bd psql -f /root/ejemplos/ej1.sql -o /dev/null
+	docker exec -it -u postgres pg-tpe-bd psql -f /root/ejemplos/ej2.sql
+
+.PHONY: container setup psql test-trigger all
